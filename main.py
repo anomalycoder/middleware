@@ -18,7 +18,7 @@ RATE_LIMIT_WINDOW_SECONDS = 10
 # triggering the verification, and looking at the "Origin" request header.
 ALLOWED_ORIGINS = [
     "https://app-9thw6n.example.com",
-    "https://your-exam-domain.com" # <-- REPLACE THIS with the exam page origin
+    "https://exam.sanand.workers.dev/tds-2026-05-ga2" # <-- REPLACE THIS with the exam page origin
 ]
 
 USER_EMAIL = "your-email@example.com" # <-- REPLACE THIS with your logged-in email
