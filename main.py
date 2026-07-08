@@ -21,7 +21,7 @@ ALLOWED_ORIGINS = [
     "https://exam.sanand.workers.dev/tds-2026-05-ga2" # <-- REPLACE THIS with the exam page origin
 ]
 
-USER_EMAIL = "your-email@example.com" # <-- REPLACE THIS with your logged-in email
+USER_EMAIL = "24f2002227@ds.study.iitm.ac.in" # <-- REPLACE THIS with your logged-in email
 
 # In-memory store for rate limiting: { "client_id": [timestamp1, timestamp2, ...] }
 client_request_history = {}
