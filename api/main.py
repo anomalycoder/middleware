@@ -1,52 +1,31 @@
-import time
-import uuid
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+import time
+import uuid
 
-# Vercel is looking for this exact line below!
 app = FastAPI()
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
 RATE_LIMIT_BUCKET_SIZE = 14
 RATE_LIMIT_WINDOW_SECONDS = 10
 USER_EMAIL = "24f2002227@ds.study.iitm.ac.in"
 
 ALLOWED_ORIGINS = [
     "https://app-9thw6n.example.com",
-    "https://tds.study.iitm.ac.in",
-    https://exam.sanand.workers.dev/tds-2026-05-ga2,
-https://exam.sanand.workers.dev # The exam portal origin
+    "https://tds.study.iitm.ac.in"
 ]
 
-# In-memory store for rate limiting
 client_request_history = {}
 
-
-# ==========================================
-# MIDDLEWARE 1: REQUEST CONTEXT
-# ==========================================
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        req_id = request.headers.get("X-Request-ID")
-        if not req_id:
-            req_id = str(uuid.uuid4())
-        
+        req_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         request.state.request_id = req_id
-        
         response = await call_next(request)
-        
-        # Ensure the header is attached to ALL responses, even 429 errors
         response.headers["X-Request-ID"] = req_id
         return response
 
-
-# ==========================================
-# MIDDLEWARE 3: RATE LIMITING
-# ==========================================
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if request.method == "OPTIONS":
@@ -59,37 +38,25 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             history = [t for t in history if current_time - t < RATE_LIMIT_WINDOW_SECONDS]
             
             if len(history) >= RATE_LIMIT_BUCKET_SIZE:
-                return JSONResponse(
-                    status_code=429, 
-                    content={"detail": "Too Many Requests"}
-                )
+                return JSONResponse(status_code=429, content={"detail": "Too Many Requests"})
             
             history.append(current_time)
             client_request_history[client_id] = history
             
         return await call_next(request)
 
-
-# ==========================================
-# MIDDLEWARE REGISTRATION
-# ==========================================
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestContextMiddleware)
 
-# Outermost: CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Request-ID"] # Allows grader script to read the custom header
+    expose_headers=["X-Request-ID"]
 )
 
-
-# ==========================================
-# ENDPOINT
-# ==========================================
 @app.get("/ping")
 async def ping(request: Request):
     return {
