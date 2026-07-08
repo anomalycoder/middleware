@@ -8,12 +8,10 @@ app = FastAPI()
 
 EMAIL = "24f2002227@ds.study.iitm.ac.in"
 
-# Replace the second origin with your actual exam page origin if needed.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://app-9thw6n.example.com",
-        "https://exam.sanand.workers.dev"
     ],
     allow_credentials=True,
     allow_methods=["GET", "OPTIONS"],
@@ -22,44 +20,37 @@ app.add_middleware(
 
 LIMIT = 14
 WINDOW = 10
-buckets = {}
+clients = {}
 
 
 @app.middleware("http")
-async def request_context_and_rate_limit(request: Request, call_next):
-
+async def middleware(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID")
-
     if not request_id:
         request_id = str(uuid.uuid4())
 
     request.state.request_id = request_id
 
     client = request.headers.get("X-Client-Id", "anonymous")
-
     now = time.time()
 
-    if client not in buckets:
-        buckets[client] = []
+    if client not in clients:
+        clients[client] = []
 
-    buckets[client] = [
-        t for t in buckets[client]
+    clients[client] = [
+        t for t in clients[client]
         if now - t < WINDOW
     ]
 
-    if len(buckets[client]) >= LIMIT:
-
-        return JSONResponse(
+    if len(clients[client]) >= LIMIT:
+        response = JSONResponse(
             status_code=429,
-            headers={
-                "X-Request-ID": request_id
-            },
-            content={
-                "detail": "Rate limit exceeded"
-            },
+            content={"detail": "Rate limit exceeded"},
         )
+        response.headers["X-Request-ID"] = request_id
+        return response
 
-    buckets[client].append(now)
+    clients[client].append(now)
 
     response = await call_next(request)
 
@@ -77,5 +68,5 @@ def root():
 def ping(request: Request):
     return {
         "email": EMAIL,
-        "request_id": request.state.request_id
+        "request_id": request.state.request_id,
     }
