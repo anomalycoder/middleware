@@ -13,7 +13,9 @@ USER_EMAIL = "24f2002227@ds.study.iitm.ac.in"
 
 ALLOWED_ORIGINS = [
     "https://app-9thw6n.example.com",
-    "https://tds.study.iitm.ac.in"
+    "https://tds.study.iitm.ac.in",
+    "https://exam.sanand.workers.dev/tds-2026-05-ga2",
+    "https://exam.sanand.workers.dev"
 ]
 
 client_request_history = {}
